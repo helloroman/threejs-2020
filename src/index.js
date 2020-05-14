@@ -16,61 +16,38 @@ const handleResize = () => {
   camera.updateProjectionMatrix();
 };
 
-const createSphere = (r = 1, color = 0xffffff) => {
-  const sphereGeo = new THREE.SphereGeometry(r, 20, 20);
-  const sphereMat = new THREE.MeshPhongMaterial({
-    color,
-    shininess: 30,
+const createBox = (s = 2, color = 0xffffff) => {
+  const boxGeo = new THREE.BoxGeometry(s, s, s);
+  const boxMat = new THREE.MeshPhongMaterial({
+    color: 0xfdd927,
+    shininess: 0,
   });
-  return new THREE.Mesh(sphereGeo, sphereMat);
+  return new THREE.Mesh(boxGeo, boxMat);
 };
 
 const createPointLight = (i = 1, color = 0xffffff) => {
   return new THREE.PointLight(color, i);
 };
 
-const nucleus = createSphere(3);
-const l1 = createPointLight(.8);
-const l2 = createPointLight(.4);
-l1.position.set(60, 20, 60);
-l2.position.set(-30, 0, 20);
+const l1 = createPointLight(1);
+l1.position.set(0, 0, 100);
+scene.add(l1);
 
-scene.add(nucleus, l2);
-nucleus.add(l1);
+let boxes = [];
 
-const createElectron = (r = 0.4, color = 0xffffff) => {
-  const sphere = createSphere(r, color);
-  const pivot = new THREE.Object3D();
-  pivot.add(sphere);
-  return {
-    sphere,
-    pivot
+for (let i = 0; i <= 10; i++) {
+  for (let j = 0; j <= 15; j++) {
+    const newBox = createBox(5);
+    newBox.position.set(6 * j - 35, 7.2 * i-25, 0);
+    boxes.push(newBox);
   }
 }
 
-const e1 = createElectron(0.4);
-const e2 = createElectron(0.4);
-const e3 = createElectron(0.4);
-const e4 = createElectron(0.4);
-e1.sphere.position.set(10,0,0);
-e2.sphere.position.set(5, 0, 0);
-e3.sphere.position.set(-5, 0, 0);
-e4.sphere.position.set(-10, 0, 0);
-nucleus.add(e1.pivot, e2.pivot, e3.pivot, e4.pivot);
+boxes.forEach(box => scene.add(box));
 
-e1.pivot.rotation.y = 90;
-e2.pivot.rotation.y = 60;
-e3.pivot.rotation.y = -60;
-e4.pivot.rotation.y = -90;
 
 const loop = () => {
-  e1.pivot.rotation.z += 0.04;
-  e2.pivot.rotation.z += 0.03;
-  e3.pivot.rotation.z += 0.03;
-  e4.pivot.rotation.z += 0.04;
-  nucleus.rotation.z += 0.001;
-  nucleus.rotation.x += 0.002;
-  nucleus.rotation.y += 0.003;
+  boxes.forEach((box, i) => box.rotation.x += 0.0002*i);
   renderer.render(scene, camera);
   requestAnimationFrame(loop);
 };
