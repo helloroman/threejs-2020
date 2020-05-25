@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import _ from 'lodash';
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setClearColor(0xeeeeee);
@@ -40,7 +41,14 @@ meshFloor.position.y = -1.05;
 meshFloor.receiveShadow = true;
 scene.add(meshFloor);
 
-const box = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 2), new THREE.MeshLambertMaterial({ color: 0xaaaaaa }));
+const defaultColor = new THREE.Color('hsl(0, 0%, 65%)');
+const highlightColor = new THREE.Color('hsl(40, 85%, 70%)');
+
+const box = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 2), new THREE.MeshLambertMaterial({
+  color: defaultColor,
+  vertexColors: THREE.VertexColors
+}));
+box.material.vertexColors = true;
 box.castShadow = true;
 box.geometry.elementsNeedUpdate = true;
 box.geometry.colorsNeedUpdate = true;
@@ -48,23 +56,48 @@ box.geometry.groupsNeedUpdate = true;
 scene.add(box);
 
 const createBox = () => {
-  return new THREE.Mesh(new THREE.BoxGeometry(2, 2, 2), new THREE.MeshLambertMaterial({ color: 0xaaaaaa }));
+  return new THREE.Mesh(new THREE.BoxGeometry(2, 2, 2), new THREE.MeshPhongMaterial({
+    color: defaultColor,
+    vertexColors: THREE.VertexColors
+  }));
 };
 
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
+
+const resetFacesColors = () => {
+  const allBoxes = scene.children.filter(child => child.geometry && child.geometry.type === 'BoxGeometry');
+  allBoxes.map((box) => box.geometry.faces.map(face => {
+    console.log(face.color.getHex());
+    face.color && face.color.set(0xffffff);
+  }));
+}
+
+window.addEventListener('mousemove', _.throttle(resetFacesColors, 200));
 
 window.addEventListener('mousemove', (e) => {
   mouse.x = 2 * (e.clientX / window.innerWidth) - 1;
   mouse.y = 1 - 2 * (e.clientY / window.innerHeight);
   raycaster.setFromCamera(mouse, camera);
   const intersects = raycaster.intersectObjects(scene.children);
+
   if (intersects.length) {
     const [currentObj] = intersects;
     if (currentObj.object.geometry.type === 'BoxGeometry') {
+      currentObj.object.geometry.faces.map(face => {
+        face.color.set(0xffffff);
+      });
+      currentObj.object.geometry.colorsNeedUpdate = true;
+      currentObj.object.material.vertexColors = true;
+      currentObj.object.geometry.needsUpdate = true;
+      if (currentObj.faceIndex % 2 === 0) {
+        currentObj.object.geometry.faces[currentObj.faceIndex].color.set(highlightColor);
+        currentObj.object.geometry.faces[currentObj.faceIndex + 1].color.set(highlightColor);
+      } else {
+        currentObj.object.geometry.faces[currentObj.faceIndex].color.set(highlightColor);
+        currentObj.object.geometry.faces[currentObj.faceIndex - 1].color.set(highlightColor);
+      }
 
-      const index = Math.floor(intersects[0].faceIndex / 2);
-      currentObj.object.geometry.faces[index].color.set(0x1122ff);
     }
   }
 }, false);
@@ -77,34 +110,31 @@ window.addEventListener('mousedown', (e) => {
   if (intersects.length) {
     const [currentObj] = intersects;
     if (currentObj.object.geometry.type === 'BoxGeometry') {
-      console.log(e.button);
       if (e.button === 2) {
         const boxToRemove = scene.getObjectByName(currentObj.object.name);
         scene.remove(boxToRemove);
       } else {
-        console.log('cycki');
         const index = Math.floor(intersects[0].faceIndex / 2);
         const { object: { position: { x, y, z } } } = currentObj;
         let newBox;
         switch (index) {
           case 0:
             newBox = createBox();
-            newBox.name = `box${Math.floor(Math.random()*10000000)}`;
-            console.log(newBox.name);
+            newBox.name = `box${Math.floor(Math.random() * 10000000)}`;
             newBox.position.set(x + 2.05, y, z);
             scene.add(newBox);
             newBox = null;
             return;
           case 1:
             newBox = createBox();
-            newBox.name = `box${Math.floor(Math.random()*10000000)}`;
+            newBox.name = `box${Math.floor(Math.random() * 10000000)}`;
             newBox.position.set(x - 2.05, y, z);
             scene.add(newBox);
             newBox = null;
             return;
           case 2:
             newBox = createBox();
-            newBox.name = `box${Math.floor(Math.random()*10000000)}`;
+            newBox.name = `box${Math.floor(Math.random() * 10000000)}`;
             newBox.position.set(x, y + 2.05, z);
             scene.add(newBox);
             newBox = null;
@@ -113,14 +143,14 @@ window.addEventListener('mousedown', (e) => {
             return;
           case 4:
             newBox = createBox();
-            newBox.name = `box${Math.floor(Math.random()*10000000)}`;
+            newBox.name = `box${Math.floor(Math.random() * 10000000)}`;
             newBox.position.set(x, y, z + 2.05);
             scene.add(newBox);
             newBox = null;
             return;
           case 5:
             newBox = createBox();
-            newBox.name = `box${Math.floor(Math.random()*10000000)}`;
+            newBox.name = `box${Math.floor(Math.random() * 10000000)}`;
             newBox.position.set(x, y, z - 2.05);
             scene.add(newBox);
             newBox = null;
