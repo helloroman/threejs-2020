@@ -44,10 +44,13 @@ scene.add(meshFloor);
 const defaultColor = new THREE.Color('hsl(0, 0%, 65%)');
 const highlightColor = new THREE.Color('hsl(40, 85%, 70%)');
 
+let faces = [];
+
 const box = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 2), new THREE.MeshLambertMaterial({
   color: defaultColor,
   vertexColors: THREE.VertexColors
 }));
+faces = [...faces, ...box.geometry.faces];
 box.material.vertexColors = true;
 box.castShadow = true;
 box.geometry.elementsNeedUpdate = true;
@@ -56,7 +59,7 @@ box.geometry.groupsNeedUpdate = true;
 scene.add(box);
 
 const createBox = () => {
-  return new THREE.Mesh(new THREE.BoxGeometry(2, 2, 2), new THREE.MeshPhongMaterial({
+  return new THREE.Mesh(new THREE.BoxGeometry(2, 2, 2), new THREE.MeshLambertMaterial({
     color: defaultColor,
     vertexColors: THREE.VertexColors
   }));
@@ -65,15 +68,17 @@ const createBox = () => {
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
-const resetFacesColors = () => {
+const onUpdate = () => {
   const allBoxes = scene.children.filter(child => child.geometry && child.geometry.type === 'BoxGeometry');
-  allBoxes.map((box) => box.geometry.faces.map(face => {
-    console.log(face.color.getHex());
-    face.color && face.color.set(0xffffff);
-  }));
+  allBoxes.map(box => {
+    box.geometry.faces.map(face => face.color.set(new THREE.Color()));
+    box.geometry.colorsNeedUpdate = true;
+    box.material.needsUpdate = true;
+  });
+
 }
 
-window.addEventListener('mousemove', _.throttle(resetFacesColors, 200));
+window.addEventListener('mousemove', onUpdate);
 
 window.addEventListener('mousemove', (e) => {
   mouse.x = 2 * (e.clientX / window.innerWidth) - 1;
@@ -84,12 +89,6 @@ window.addEventListener('mousemove', (e) => {
   if (intersects.length) {
     const [currentObj] = intersects;
     if (currentObj.object.geometry.type === 'BoxGeometry') {
-      currentObj.object.geometry.faces.map(face => {
-        face.color.set(0xffffff);
-      });
-      currentObj.object.geometry.colorsNeedUpdate = true;
-      currentObj.object.material.vertexColors = true;
-      currentObj.object.geometry.needsUpdate = true;
       if (currentObj.faceIndex % 2 === 0) {
         currentObj.object.geometry.faces[currentObj.faceIndex].color.set(highlightColor);
         currentObj.object.geometry.faces[currentObj.faceIndex + 1].color.set(highlightColor);
@@ -97,10 +96,12 @@ window.addEventListener('mousemove', (e) => {
         currentObj.object.geometry.faces[currentObj.faceIndex].color.set(highlightColor);
         currentObj.object.geometry.faces[currentObj.faceIndex - 1].color.set(highlightColor);
       }
-
+      currentObj.object.geometry.colorsNeedUpdate = true;
+      currentObj.object.material.needsUpdate = true;
     }
   }
 }, false);
+
 
 window.addEventListener('mousedown', (e) => {
   mouse.x = 2 * (e.clientX / window.innerWidth) - 1;
@@ -122,6 +123,7 @@ window.addEventListener('mousedown', (e) => {
             newBox = createBox();
             newBox.name = `box${Math.floor(Math.random() * 10000000)}`;
             newBox.position.set(x + 2.05, y, z);
+            faces = [...faces, ...newBox.geometry.faces];
             scene.add(newBox);
             newBox = null;
             return;
@@ -129,15 +131,19 @@ window.addEventListener('mousedown', (e) => {
             newBox = createBox();
             newBox.name = `box${Math.floor(Math.random() * 10000000)}`;
             newBox.position.set(x - 2.05, y, z);
+            faces = [...faces, ...newBox.geometry.faces];
             scene.add(newBox);
             newBox = null;
             return;
           case 2:
-            newBox = createBox();
-            newBox.name = `box${Math.floor(Math.random() * 10000000)}`;
-            newBox.position.set(x, y + 2.05, z);
-            scene.add(newBox);
-            newBox = null;
+            if (y < 10) {
+              newBox = createBox();
+              newBox.name = `box${Math.floor(Math.random() * 10000000)}`;
+              newBox.position.set(x, y + 2.05, z);
+              faces = [...faces, ...newBox.geometry.faces];
+              scene.add(newBox);
+              newBox = null;
+            }
             return;
           case 3:
             return;
@@ -145,6 +151,7 @@ window.addEventListener('mousedown', (e) => {
             newBox = createBox();
             newBox.name = `box${Math.floor(Math.random() * 10000000)}`;
             newBox.position.set(x, y, z + 2.05);
+            faces = [...faces, ...newBox.geometry.faces];
             scene.add(newBox);
             newBox = null;
             return;
@@ -152,6 +159,7 @@ window.addEventListener('mousedown', (e) => {
             newBox = createBox();
             newBox.name = `box${Math.floor(Math.random() * 10000000)}`;
             newBox.position.set(x, y, z - 2.05);
+            faces = [...faces, ...newBox.geometry.faces];
             scene.add(newBox);
             newBox = null;
             return;
@@ -160,6 +168,8 @@ window.addEventListener('mousedown', (e) => {
     }
   }
 }, false);
+
+
 
 
 const render = () => {
