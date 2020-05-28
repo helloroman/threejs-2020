@@ -11,9 +11,36 @@
       margin: 0;
       padding: 0;
     }
+
+    .control {
+      width: 30px;
+      height: 30px;
+      z-index: 10000;
+      cursor: pointer;
+      background-color: black;
+      border-radius: 50px;
+      position: absolute;
+      left: 50px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    .wood {
+      background-color: hsl(40, 25%, 45%);
+      transform: translateY(-200%);
+    }
+
+    .white {
+      background-color: white;
+      transform: translateY(+100%);
+      box-shadow: inset 0 0 2px 1px black;
+    }
   </style>
 </head>
 <body>
+<div class="control black"></div>
+<div class="control white"></div>
+<div class="control wood"></div>
 <script defer src="app.bundle.js"></script>
 </body>
 </html>
