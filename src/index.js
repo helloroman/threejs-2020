@@ -42,6 +42,7 @@ scene.add(meshFloor);
 
 let defaultColor = new THREE.Color('hsl(0, 0%, 65%)');
 const highlightColor = new THREE.Color('hsl(40, 85%, 70%)');
+const emptyColor = new THREE.Color();
 
 
 const box = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 2), new THREE.MeshLambertMaterial({
@@ -65,17 +66,8 @@ const createBox = () => {
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
-const onUpdate = () => {
-  const allBoxes = scene.children.filter(child => child.geometry && child.geometry.type === 'BoxGeometry');
-  allBoxes.map(box => {
-    box.geometry.faces.map(face => face.color.set(new THREE.Color()));
-    box.geometry.colorsNeedUpdate = true;
-    box.material.needsUpdate = true;
-  });
-
-};
-
-window.addEventListener('mousemove', onUpdate);
+let lastBox
+let lastFaces
 
 window.addEventListener('mousemove', (e) => {
   mouse.x = 2 * (e.clientX / window.innerWidth) - 1;
@@ -85,16 +77,37 @@ window.addEventListener('mousemove', (e) => {
 
   if (intersects.length) {
     const [currentObj] = intersects;
+    let currentFaces
+
     if (currentObj.object.geometry.type === 'BoxGeometry') {
       if (currentObj.faceIndex % 2 === 0) {
         currentObj.object.geometry.faces[currentObj.faceIndex].color.set(highlightColor);
         currentObj.object.geometry.faces[currentObj.faceIndex + 1].color.set(highlightColor);
+        currentFaces = [currentObj.faceIndex, currentObj.faceIndex + 1]
       } else {
         currentObj.object.geometry.faces[currentObj.faceIndex].color.set(highlightColor);
         currentObj.object.geometry.faces[currentObj.faceIndex - 1].color.set(highlightColor);
+        currentFaces = [currentObj.faceIndex, currentObj.faceIndex - 1]
       }
       currentObj.object.geometry.colorsNeedUpdate = true;
       currentObj.object.material.needsUpdate = true;
+
+      if (lastBox) {
+        if (currentObj.object.id === lastBox.id) {
+          if (currentFaces[0] !== lastFaces[0] || currentFaces[1] !== lastFaces[1]) {
+            currentObj.object.geometry.faces[lastFaces[0]].color.set(emptyColor);
+            currentObj.object.geometry.faces[lastFaces[1]].color.set(emptyColor);
+          }
+        } else {
+          resetBoxColor(lastBox)
+        }
+      }
+
+      lastBox = currentObj.object
+      lastFaces = currentFaces
+    } else if (lastBox) {
+      resetBoxColor(lastBox)
+      lastBox = null
     }
   }
 }, false);
@@ -173,3 +186,10 @@ control.forEach(button => button.addEventListener('click', () => {
 
 
 render();
+
+function resetBoxColor(box) {
+  console.log('reseting box color')
+  box.geometry.faces.map(face => face.color.set(emptyColor));
+  box.geometry.colorsNeedUpdate = true;
+  box.material.needsUpdate = true;
+}
