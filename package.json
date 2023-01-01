@@ -17,14 +17,14 @@
     "onchange": "^7.0.2",
     "parallelshell": "^3.0.1",
     "three": "^0.116.1",
-    "webpack": "^4.43.0",
-    "webpack-cli": "^3.3.11",
+    "webpack": "^5.75.0",
+    "webpack-cli": "^5.0.1",
     "webpack-dev-server": "^3.11.0"
   },
   "devDependencies": {
     "@babel/core": "^7.9.6",
     "@babel/plugin-proposal-class-properties": "^7.8.3",
     "@babel/preset-env": "^7.9.6",
-    "babel-loader": "^8.1.0"
+    "babel-loader": "^8.3.0"
   }
 }
